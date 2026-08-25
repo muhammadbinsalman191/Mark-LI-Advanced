@@ -183,39 +183,195 @@ def warmup_model(system_prompt: str | None = None) -> bool:
         print(f"[LLM] Warmup failed (non-fatal): {e}")
         return False
 
-
 def check_model_available(log: Callable | None = None) -> bool:
     """
-    Returns True if the configured model is already pulled in Ollama.
-    Logs an actionable warning (to console + optional UI callback) if not.
-    Always returns True for non-Ollama providers (cannot inspect their model list).
-    """
-    if get_llm_provider() != "ollama":
-        return True
+    Check whether the configured secondary LLM provider is reachable and,
+    when possible, whether the configured model actually exists.
 
+    Returns:
+        True  -> provider reachable and model available, or provider reachable
+                 but its model list cannot be reliably inspected.
+        False -> provider unreachable, HTTP failure, or configured model missing.
+    """
+    provider = get_llm_provider()
     url, model = get_llm_settings()
-    try:
-        resp = requests.get(f"{url}/api/tags", timeout=5)
-        resp.raise_for_status()
-        pulled = [m.get("name", "") for m in resp.json().get("models", [])]
-        model_base = model.split(":")[0]
-        found = any(
-            m == model or m == model_base or m.startswith(model_base + ":")
-            for m in pulled
-        )
-        if not found:
-            available = ", ".join(pulled) if pulled else "none"
-            warn = (
-                f"WRN: Model '{model}' is not pulled in Ollama.\n"
-                f"     Available: {available}\n"
-                f"     Fix: ollama pull {model}"
+
+    def _warn(message: str) -> None:
+        print(message)
+        if log:
+            try:
+                log(message.replace("\n", " "))
+            except Exception:
+                pass
+
+    # ---------------------------------------------------------
+    # Ollama
+    # ---------------------------------------------------------
+    if provider == "ollama":
+        endpoint = f"{url}/api/tags"
+
+        try:
+            resp = requests.get(endpoint, timeout=5)
+            resp.raise_for_status()
+
+        except requests.exceptions.ConnectionError:
+            _warn(
+                f"WRN: Ollama is not reachable at {url}.\n"
+                "     Start Ollama or install it before using the secondary LLM."
             )
-            print(warn)
-            if log:
-                log(f"WRN: '{model}' not found — run: ollama pull {model}")
-        return found
-    except Exception:
-        return True   # Ollama might still be starting up; non-blocking
+            return False
+
+        except requests.exceptions.Timeout:
+            _warn(
+                f"WRN: Ollama at {url} did not respond within 5 seconds."
+            )
+            return False
+
+        except requests.exceptions.HTTPError as e:
+            status = (
+                e.response.status_code
+                if e.response is not None
+                else "unknown"
+            )
+            _warn(
+                f"WRN: Ollama health check returned HTTP {status}."
+            )
+            return False
+
+        except Exception as e:
+            _warn(
+                f"WRN: Could not inspect Ollama: "
+                f"{type(e).__name__}: {e}"
+            )
+            return False
+
+        try:
+            data = resp.json()
+            pulled = [
+                item.get("name", "")
+                for item in data.get("models", [])
+                if isinstance(item, dict)
+            ]
+        except Exception as e:
+            _warn(
+                f"WRN: Ollama is reachable, but its model list "
+                f"could not be parsed: {e}"
+            )
+            return True
+
+        model_base = model.split(":")[0]
+
+        found = any(
+            name == model
+            or name == model_base
+            or name.startswith(model_base + ":")
+            for name in pulled
+        )
+
+        if found:
+            print(
+                f"[LLM] Ollama reachable; model '{model}' is available."
+            )
+            return True
+
+        available = ", ".join(pulled) if pulled else "none"
+
+        _warn(
+            f"WRN: Model '{model}' is not installed in Ollama.\n"
+            f"     Available: {available}\n"
+            f"     Fix: ollama pull {model}"
+        )
+        return False
+
+    # ---------------------------------------------------------
+    # OpenAI-compatible provider
+    # ---------------------------------------------------------
+    endpoint = f"{url}/v1/models"
+
+    try:
+        resp = requests.get(endpoint, timeout=5)
+        resp.raise_for_status()
+
+    except requests.exceptions.ConnectionError:
+        _warn(
+            f"WRN: OpenAI-compatible server is not reachable at {url}."
+        )
+        return False
+
+    except requests.exceptions.Timeout:
+        _warn(
+            f"WRN: OpenAI-compatible server at {url} "
+            "did not respond within 5 seconds."
+        )
+        return False
+
+    except requests.exceptions.HTTPError as e:
+        status = (
+            e.response.status_code
+            if e.response is not None
+            else "unknown"
+        )
+        _warn(
+            f"WRN: OpenAI-compatible health check returned "
+            f"HTTP {status}."
+        )
+        return False
+
+    except Exception as e:
+        _warn(
+            f"WRN: Could not reach OpenAI-compatible server: "
+            f"{type(e).__name__}: {e}"
+        )
+        return False
+
+    try:
+        data = resp.json()
+        entries = data.get("data")
+
+        if not isinstance(entries, list):
+            _warn(
+                "[LLM] Provider is reachable, but its model list "
+                "format is not recognized. Model availability "
+                "cannot be verified."
+            )
+            return True
+
+        model_ids = [
+            item.get("id", "")
+            for item in entries
+            if isinstance(item, dict)
+        ]
+
+        if not model_ids:
+            _warn(
+                "[LLM] Provider is reachable, but it returned no "
+                "inspectable model IDs. Model availability cannot "
+                "be verified."
+            )
+            return True
+
+        if model in model_ids:
+            print(
+                f"[LLM] OpenAI-compatible server reachable; "
+                f"model '{model}' is available."
+            )
+            return True
+
+        available = ", ".join(model_ids[:20])
+
+        _warn(
+            f"WRN: Configured model '{model}' was not found on "
+            f"the OpenAI-compatible server.\n"
+            f"     Available: {available}"
+        )
+        return False
+
+    except Exception as e:
+        _warn(
+            f"[LLM] Provider is reachable, but model inspection "
+            f"failed: {e}"
+        )
+        return True
 
 
 def get_llm_settings() -> tuple[str, str]:
