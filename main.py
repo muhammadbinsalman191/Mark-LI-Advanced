@@ -1079,10 +1079,98 @@ class JarvisLive:
 
                     if response.tool_call:
                         fn_responses = []
-                        for fc in response.tool_call.function_calls:
+                        function_calls = list(response.tool_call.function_calls or [])
+
+                        # Runtime guard: prevent duplicate tool execution and
+                        # unreasonable tool-call bursts from a single model response.
+                        max_unique_calls = 8
+                        executed_count = 0
+                        seen_calls = set()
+
+                        for fc in function_calls:
+                            args = dict(fc.args or {})
+
+                            try:
+                                fingerprint = (
+                                    f"{fc.name}:"
+                                    + json.dumps(
+                                        args,
+                                        sort_keys=True,
+                                        default=str,
+                                        ensure_ascii=False,
+                                    )
+                                )
+                            except Exception:
+                                fingerprint = f"{fc.name}:{repr(args)}"
+
+                            # Gemini can occasionally emit an identical function
+                            # call twice in one response. Never execute it twice.
+                            if fingerprint in seen_calls:
+                                print(
+                                    f"[JARVIS] ⚠ Duplicate tool call blocked: "
+                                    f"{fc.name} {args}"
+                                )
+
+                                fn_responses.append(
+                                    types.FunctionResponse(
+                                        id=fc.id,
+                                        name=fc.name,
+                                        response={
+                                            "result": (
+                                                "Duplicate tool call skipped because "
+                                                "the identical action was already "
+                                                "executed in this response."
+                                            ),
+                                            "duplicate": True,
+                                        },
+                                    )
+                                )
+                                continue
+
+                            seen_calls.add(fingerprint)
+
+                            # Protect the runtime from an abnormal tool-call burst.
+                            if executed_count >= max_unique_calls:
+                                print(
+                                    f"[JARVIS] ⚠ Tool-call limit reached: "
+                                    f"{fc.name} was not executed"
+                                )
+
+                                fn_responses.append(
+                                    types.FunctionResponse(
+                                        id=fc.id,
+                                        name=fc.name,
+                                        response={
+                                            "result": (
+                                                "Tool execution limit reached for "
+                                                "this response. Continue using the "
+                                                "completed results before requesting "
+                                                "additional actions."
+                                            ),
+                                            "limit_reached": True,
+                                        },
+                                    )
+                                )
+                                continue
+
                             print(f"[JARVIS] 📞 {fc.name}")
+
+                            started = asyncio.get_running_loop().time()
+
                             fr = await self._execute_tool(fc)
+
+                            elapsed = (
+                                asyncio.get_running_loop().time() - started
+                            )
+
+                            print(
+                                f"[JARVIS] ⏱ {fc.name} completed "
+                                f"in {elapsed:.2f}s"
+                            )
+
+                            executed_count += 1
                             fn_responses.append(fr)
+
                         await self.session.send_tool_response(
                             function_responses=fn_responses
                         )
