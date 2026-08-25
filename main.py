@@ -23,8 +23,18 @@ import time
 import json
 import sys
 import traceback
+import warnings
 from datetime import datetime
 from pathlib import Path
+
+# Suppress one known NumPy 2.5 compatibility warning emitted repeatedly by
+# sounddevice. Keep all other DeprecationWarnings and runtime warnings visible.
+warnings.filterwarnings(
+    "ignore",
+    message=r"Setting the shape on a NumPy array has been deprecated in NumPy 2\.5\.",
+    category=DeprecationWarning,
+    module=r"sounddevice",
+)
 
 import sounddevice as sd
 from google import genai
