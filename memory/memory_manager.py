@@ -108,13 +108,34 @@ def _recursive_update(target: dict, updates: dict) -> bool:
     return changed
 
 
-def update_memory(memory_update: dict) -> dict:
+def update_memory_with_status(memory_update: dict) -> tuple[dict, bool]:
+    """
+    Update long-term memory and report whether anything actually changed.
+
+    Returns:
+        (memory, True)  when a new value was saved or an existing value changed.
+        (memory, False) when the requested memory was already identical or invalid.
+    """
     if not isinstance(memory_update, dict) or not memory_update:
-        return load_memory()
+        return load_memory(), False
+
     memory = load_memory()
-    if _recursive_update(memory, memory_update):
+    changed = _recursive_update(memory, memory_update)
+
+    if changed:
         save_memory(memory)
         print(f"[Memory] 💾 Saved: {list(memory_update.keys())}")
+
+    return memory, changed
+
+
+def update_memory(memory_update: dict) -> dict:
+    """
+    Backward-compatible memory update API.
+
+    Existing callers still receive only the updated memory dictionary.
+    """
+    memory, _changed = update_memory_with_status(memory_update)
     return memory
 
 def format_memory_for_prompt(memory: dict | None) -> str:
@@ -195,11 +216,18 @@ def format_memory_for_prompt(memory: dict | None) -> str:
 
 def remember(key: str, value: str, category: str = "notes") -> str:
     valid = {"identity", "preferences", "projects", "relationships", "wishes", "notes"}
+
     if category not in valid:
         category = "notes"
-    update_memory({category: {key: {"value": value}}})
-    return f"Remembered: {category}/{key} = {value}"
 
+    _memory, changed = update_memory_with_status(
+        {category: {key: {"value": value}}}
+    )
+
+    if changed:
+        return f"Remembered: {category}/{key} = {value}"
+
+    return f"Already remembered: {category}/{key} = {value}"
 
 def forget(key: str, category: str = "notes") -> str:
     memory = load_memory()

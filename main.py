@@ -41,8 +41,8 @@ from google import genai
 from google.genai import types
 from ui import JarvisUI
 from memory.memory_manager import (
-    load_memory, update_memory, format_memory_for_prompt,
-    save_session_summary, pop_last_session,
+    load_memory, update_memory, update_memory_with_status,
+    format_memory_for_prompt, save_session_summary, pop_last_session,
 )
 
 from actions.file_processor import file_processor
@@ -770,14 +770,30 @@ class JarvisLive:
             category = args.get("category", "notes")
             key      = args.get("key", "")
             value    = args.get("value", "")
+
+            changed = False
+
             if key and value:
-                update_memory({category: {key: {"value": value}}})
-                print(f"[Memory] 💾 save_memory: {category}/{key} = {value}")
+                _memory, changed = update_memory_with_status(
+                    {category: {key: {"value": value}}}
+                )
+
+                if changed:
+                    print(f"[Memory] Saved: {category}/{key} = {value}")
+                else:
+                    print(f"[Memory] Unchanged: {category}/{key} = {value}")
+
             if not self.ui.muted:
                 self.ui.set_state("LISTENING")
+
             return types.FunctionResponse(
-                id=fc.id, name=name,
-                response={"result": "ok", "silent": True}
+                id=fc.id,
+                name=name,
+                response={
+                    "result": "saved" if changed else "unchanged",
+                    "changed": changed,
+                    "silent": True,
+                },
             )
 
         loop   = asyncio.get_event_loop()
