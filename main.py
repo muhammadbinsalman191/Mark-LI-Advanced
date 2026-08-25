@@ -1009,21 +1009,47 @@ class JarvisLive:
             while True:
                 async for response in self.session.receive():
 
-                    if response.data:
+                    sc = response.server_content
+
+                    # Extract audio directly from model-turn parts instead of using
+                    # response.data. The SDK convenience property warns when a Live
+                    # response also contains text/thought parts alongside audio.
+                    _audio_parts = []
+
+                    if sc and getattr(sc, "model_turn", None):
+                        for part in getattr(sc.model_turn, "parts", []) or []:
+                            inline_data = getattr(part, "inline_data", None)
+                            if not inline_data:
+                                continue
+
+                            data = getattr(inline_data, "data", None)
+                            mime_type = (
+                                getattr(inline_data, "mime_type", "") or ""
+                            ).lower()
+
+                            if data and (not mime_type or mime_type.startswith("audio/")):
+                                _audio_parts.append(data)
+
+                    if _audio_parts:
+                        _audio_data = b"".join(_audio_parts)
+
                         if self._interrupted:
                             pass  # discard: interrupted
                         else:
-                            if self._turn_done_event and self._turn_done_event.is_set():
+                            if (
+                                self._turn_done_event
+                                and self._turn_done_event.is_set()
+                            ):
                                 self._turn_done_event.clear()
-                            # Split into ~50 ms chunks so interrupt() stops audio within 50 ms
-                            # (24000 Hz × 2 bytes/sample × 0.05 s = 2400 bytes per slice)
-                            _audio_data = response.data
+
+                            # Split into ~50 ms chunks so interrupt() stops audio quickly.
                             _SLICE = 2400
                             for _i in range(0, len(_audio_data), _SLICE):
-                                self.audio_in_queue.put_nowait(_audio_data[_i : _i + _SLICE])
+                                self.audio_in_queue.put_nowait(
+                                    _audio_data[_i : _i + _SLICE]
+                                )
 
-                    if response.server_content:
-                        sc = response.server_content
+                    if sc:
 
                         if sc.output_transcription and sc.output_transcription.text:
                             txt = _clean_transcript(sc.output_transcription.text)
