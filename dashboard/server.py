@@ -758,7 +758,15 @@ class DashboardServer:
         User types IP:8001 → Chrome tries https → self-signed cert warning → accept once → done."""
         ssl_key  = BASE_DIR / "config" / "certs" / "jarvis.key"
         ssl_cert = BASE_DIR / "config" / "certs" / "jarvis.crt"
-        asyncio.get_event_loop().run_in_executor(None, _ensure_network_access, PORT + 1)
+
+                # Windows already creates an executable-level firewall rule when the main
+        # dashboard port is configured, so a second UAC request for PORT+1 is unnecessary.
+        # Other platforms may require each listening port to be opened separately.
+        import sys
+        if sys.platform != "win32":
+            asyncio.get_event_loop().run_in_executor(
+                None, _ensure_network_access, PORT + 1
+            )
         cfg = uvicorn.Config(
             self.app, host="0.0.0.0", port=PORT + 1, log_level="warning",
             ssl_keyfile=str(ssl_key), ssl_certfile=str(ssl_cert),
