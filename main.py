@@ -108,6 +108,25 @@ def _clean_transcript(text: str) -> str:
     return text.strip()
 
 TOOL_DECLARATIONS = [
+        {
+        "name": "set_ui_mode",
+        "description": (
+            "Switches the JARVIS interface between Core Mode and Command Center Mode. "
+            "Use mode='command_center' when the user asks to open, show, expand, or enter "
+            "the command center. Use mode='core' when the user asks to close, hide, collapse, "
+            "or leave the command center and return to the minimal core interface."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "mode": {
+                    "type": "STRING",
+                    "description": "UI mode: core or command_center"
+                }
+            },
+            "required": ["mode"]
+        }
+    },
     {
         "name": "open_app",
         "description": (
@@ -800,7 +819,28 @@ class JarvisLive:
         result = "Done."
 
         try:
-            if name == "open_app":
+            if name == "set_ui_mode":
+                mode = str(args.get("mode", "")).strip().lower()
+                current_mode = self.ui.ui_mode
+
+                if mode == "command_center":
+                    if current_mode == "command_center":
+                        result = "Command Center is already open."
+                    else:
+                        self.ui.set_ui_mode("command_center")
+                        result = "Command Center opened."
+
+                elif mode == "core":
+                    if current_mode == "core":
+                        result = "Command Center is already closed."
+                    else:
+                        self.ui.set_ui_mode("core")
+                        result = "Command Center closed. Core Mode activated."
+
+                else:
+                    result = f"Invalid UI mode: {mode}"
+
+            elif name == "open_app":
                 r = await loop.run_in_executor(None, lambda: open_app(parameters=args, response=None, player=self.ui))
                 result = r or f"Opened {args.get('app_name')}."
 

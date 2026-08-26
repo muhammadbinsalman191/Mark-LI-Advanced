@@ -3490,6 +3490,10 @@ class JarvisUI:
     def write_log(self, text: str):
         self._win._log_sig.emit(text)
 
+    def set_ui_mode(self, mode: str) -> None:
+        """Thread-safe: switch between Core Mode and Command Center Mode."""
+        self._win._ui_mode_sig.emit(mode)
+
     def wait_for_api_key(self):
         while not self._win._ready:
             time.sleep(0.1)
@@ -3514,6 +3518,10 @@ class JarvisUI:
     def stop_camera_stream(self) -> None:
         """Thread-safe: stop the live camera feed."""
         self._win.stop_camera_stream()
+
+    @property
+    def ui_mode(self) -> str:
+        return self._win._ui_mode
 
     @property
     def assistant_name(self) -> str:
