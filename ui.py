@@ -1846,6 +1846,7 @@ class MainWindow(QMainWindow):
     _cam_stream_sig = pyqtSignal(bool)       # True=start live stream, False=stop
     _cam_frame_sig  = pyqtSignal(bytes)      # live camera frame → HUD area
     _clipboard_sig  = pyqtSignal(str)        # clipboard text changed (thread-safe)
+    _ui_mode_sig    = pyqtSignal(str)        # "core" or "command_center"
 
     def __init__(self, face_path: str):
         super().__init__()
@@ -1880,6 +1881,11 @@ class MainWindow(QMainWindow):
         self._remote_overlay: RemoteKeyOverlay | None = None
         self._customize_overlay: CustomizeOverlay | None = None
 
+        # Dual-interface architecture:
+        # "command_center" = full dashboard
+        # "core" = minimal AI core / orb interface
+        self._ui_mode = "command_center"
+
         central = QWidget()
         central.setStyleSheet(f"background: {C.BG};")
         self.setCentralWidget(central)
@@ -1887,7 +1893,8 @@ class MainWindow(QMainWindow):
         root = QVBoxLayout(central)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
-        root.addWidget(self._build_header())
+        self._header = self._build_header()
+        root.addWidget(self._header)
 
         body = QHBoxLayout()
         body.setContentsMargins(0, 0, 0, 0)
@@ -1961,7 +1968,8 @@ class MainWindow(QMainWindow):
         body.addWidget(self._right_panel, stretch=0)
 
         root.addLayout(body, stretch=1)
-        root.addWidget(self._build_footer())
+        self._footer = self._build_footer()
+        root.addWidget(self._footer)
 
         # Quick-access drawer (floating overlay, built after central widget layout is done)
         self._quick_drawer = self._build_quick_drawer()
@@ -1988,6 +1996,7 @@ class MainWindow(QMainWindow):
         self._cam_stream_sig.connect(self._on_cam_stream)
         self._cam_frame_sig.connect(self._on_cam_frame)
         self._clipboard_sig.connect(self._show_clipboard_panel)
+        self._ui_mode_sig.connect(self._set_ui_mode)
         self._cam_stop = threading.Event()
 
         # Camera preview overlay (child of central widget, positioned in resizeEvent)
@@ -2006,9 +2015,46 @@ class MainWindow(QMainWindow):
         sc_mute = QShortcut(QKeySequence("F4"), self)
         sc_mute.activated.connect(self._toggle_mute)
         sc_full = QShortcut(QKeySequence("F11"), self)
+        sc_full = QShortcut(QKeySequence("F11"), self)
+        sc_full.activated.connect(self._toggle_fullscreen)
+
+        sc_mode = QShortcut(QKeySequence("Ctrl+Alt+C"), self)
+        sc_mode.activated.connect(self._toggle_ui_mode)
+
+        sc_intr = QShortcut(QKeySequence("Escape"), self)
+        sc_intr.activated.connect(self._do_interrupt)
         sc_full.activated.connect(self._toggle_fullscreen)
         sc_intr = QShortcut(QKeySequence("Escape"), self)
         sc_intr.activated.connect(self._do_interrupt)
+
+    def _set_ui_mode(self, mode: str) -> None:
+        """Switch between minimal Core Mode and the full Command Center."""
+        mode = (mode or "").strip().lower()
+
+        if mode not in {"core", "command_center"}:
+            return
+
+        if mode == self._ui_mode:
+            return
+
+        self._ui_mode = mode
+        core_mode = mode == "core"
+
+        self._header.setVisible(not core_mode)
+        self._left_panel.setVisible(not core_mode)
+        self._right_panel.setVisible(not core_mode)
+        self._content_panel.setVisible(not core_mode)
+        self._footer.setVisible(not core_mode)
+
+        if core_mode:
+            self._quick_drawer.hide()
+
+        self.hud.update()
+
+    def _toggle_ui_mode(self) -> None:
+        """Toggle between Core Mode and Command Center Mode."""
+        next_mode = "core" if self._ui_mode == "command_center" else "command_center"
+        self._set_ui_mode(next_mode)
 
     def _show_camera_frame(self, img_bytes: bytes):
         """Slot — display camera preview overlay (main thread)."""
