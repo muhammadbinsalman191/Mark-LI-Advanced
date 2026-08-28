@@ -348,6 +348,7 @@ class HudCanvas(QWidget):
         self.speaking = False
         self.state    = "INITIALISING"
         self._assistant_name = assistant_name
+        self._visual_mode = "command_center"
 
         self._tick       = 0
         self._scale      = 1.0
@@ -405,7 +406,17 @@ class HudCanvas(QWidget):
         self._scale += (self._tgt_scale - self._scale) * sp
         self._halo  += (self._tgt_halo  - self._halo)  * sp
 
-        speeds = [1.3, -0.9, 2.0] if self.speaking else [0.55, -0.35, 0.9]
+        if self._visual_mode == "core":
+            if self.muted:
+                speeds = [0.18, -0.12, 0.25]
+            elif self.speaking:
+                speeds = [1.8, -1.25, 2.7]
+            elif self.state in ("THINKING", "PROCESSING"):
+                speeds = [1.15, -0.85, 1.75]
+            else:  # LISTENING / normal
+                speeds = [0.55, -0.35, 0.9]
+        else:
+            speeds = [1.3, -0.9, 2.0] if self.speaking else [0.55, -0.35, 0.9]
         for i, spd in enumerate(speeds):
             self._rings[i] = (self._rings[i] + spd) % 360
 
@@ -439,6 +450,315 @@ class HudCanvas(QWidget):
             self._blink_tick = 0
         self.update()
 
+    def _paint_core_mode(
+        self,
+        p: QPainter,
+        W: int,
+        H: int,
+        cx: float,
+        cy: float,
+        fw: int,
+    ) -> None:
+        """Minimal cinematic AI Core renderer."""
+
+        active = C.MUTED_C if self.muted else C.PRI
+
+        # Clean dark background
+        p.fillRect(self.rect(), qcol(C.BG))
+        # State-reactive core energy intensity
+        if self.muted:
+            haze_0, haze_1, haze_2 = 28, 10, 3
+            core_mid, core_outer = 145, 40
+
+        elif self.speaking:
+            haze_0, haze_1, haze_2 = 82, 34, 12
+            core_mid, core_outer = 235, 105
+
+        elif self.state in ("THINKING", "PROCESSING"):
+            haze_0, haze_1, haze_2 = 62, 25, 8
+            core_mid, core_outer = 215, 88
+
+        else:  # LISTENING / normal
+            haze_0, haze_1, haze_2 = 42, 16, 5
+            core_mid, core_outer = 190, 70
+
+        # Ambient energy haze
+        haze_r = fw * 0.32
+        haze = QRadialGradient(QPointF(cx, cy), haze_r)
+        haze.setColorAt(0.0, qcol(active, haze_0))
+        haze.setColorAt(0.35, qcol(active, haze_1))
+        haze.setColorAt(0.70, qcol(active, haze_2))
+        haze.setColorAt(1.0, qcol(C.BG, 0))
+
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(haze))
+        p.drawEllipse(
+            QRectF(
+                cx - haze_r,
+                cy - haze_r,
+                haze_r * 2,
+                haze_r * 2,
+            )
+        )
+
+        # Outer translucent energy shell
+        shell_r = fw * 0.155 * self._scale
+
+        shell = QRadialGradient(
+            QPointF(cx - shell_r * 0.18, cy - shell_r * 0.22),
+            shell_r,
+        )
+        shell.setColorAt(0.0, QColor(255, 255, 255, 28))
+        shell.setColorAt(0.35, qcol(active, 22))
+        shell.setColorAt(0.72, qcol(active, 10))
+        shell.setColorAt(1.0, qcol(active, 0))
+
+        p.setPen(QPen(qcol(active, 55), 1.0))
+        p.setBrush(QBrush(shell))
+        p.drawEllipse(
+            QRectF(
+                cx - shell_r,
+                cy - shell_r,
+                shell_r * 2,
+                shell_r * 2,
+            )
+        )
+
+        # Main glowing AI core
+        orb_r = fw * 0.13 * self._scale
+
+        core = QRadialGradient(QPointF(cx, cy), orb_r)
+        core.setColorAt(0.0, QColor(255, 255, 255, 255))
+        core.setColorAt(0.14, qcol(active, 255))
+        core.setColorAt(0.42, qcol(active, core_mid))
+        core.setColorAt(0.72, qcol(active, core_outer))
+        core.setColorAt(1.0, qcol(active, 0))
+
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(core))
+        p.drawEllipse(
+            QRectF(
+                cx - orb_r,
+                cy - orb_r,
+                orb_r * 2,
+                orb_r * 2,
+            )
+        )
+        # Spherical depth: soft edge shadow
+        shade = QRadialGradient(
+            QPointF(cx - orb_r * 0.28, cy - orb_r * 0.30),
+            orb_r * 1.35,
+        )
+        shade.setColorAt(0.0, QColor(0, 0, 0, 0))
+        shade.setColorAt(0.45, QColor(0, 0, 0, 4))
+        shade.setColorAt(0.78, QColor(0, 0, 0, 35))
+        shade.setColorAt(1.0, QColor(0, 0, 0, 95))
+
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(shade))
+        p.drawEllipse(
+            QRectF(
+                cx - orb_r,
+                cy - orb_r,
+                orb_r * 2,
+                orb_r * 2,
+            )
+        )
+
+        # Glass-like highlight on the upper-left surface
+        highlight_r = orb_r * 0.58
+        highlight_x = cx - orb_r * 0.28
+        highlight_y = cy - orb_r * 0.30
+
+        highlight = QRadialGradient(
+            QPointF(highlight_x, highlight_y),
+            highlight_r,
+        )
+        highlight.setColorAt(0.0, QColor(255, 255, 255, 125))
+        highlight.setColorAt(0.20, QColor(255, 255, 255, 65))
+        highlight.setColorAt(0.55, qcol(active, 22))
+        highlight.setColorAt(1.0, QColor(255, 255, 255, 0))
+
+        p.setBrush(QBrush(highlight))
+        p.drawEllipse(
+            QRectF(
+                highlight_x - highlight_r,
+                highlight_y - highlight_r,
+                highlight_r * 2,
+                highlight_r * 2,
+            )
+        )
+
+                # Inner bright nucleus
+        nucleus_r = orb_r * 0.28
+        nucleus = QRadialGradient(QPointF(cx, cy), nucleus_r)
+        nucleus.setColorAt(0.0, QColor(255, 255, 255, 255))
+        nucleus.setColorAt(0.22, QColor(220, 250, 255, 245))
+        nucleus.setColorAt(0.55, qcol(active, 220))
+        nucleus.setColorAt(1.0, qcol(active, 0))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(nucleus))
+        p.drawEllipse(
+            QRectF(
+                cx - nucleus_r,
+                cy - nucleus_r,
+                nucleus_r * 2,
+                nucleus_r * 2,
+            )
+        )
+
+        # Thin reactor ring
+        reactor_r = orb_r * 0.78
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.setPen(QPen(qcol(active, 150), 1.4))
+        p.drawEllipse(
+            QRectF(
+                cx - reactor_r,
+                cy - reactor_r,
+                reactor_r * 2,
+                reactor_r * 2,
+            )
+        )
+
+        # Reactor inner glow ring
+        p.setPen(QPen(qcol(active, 70), 3))
+        p.drawEllipse(
+            QRectF(
+                cx - reactor_r * 0.985,
+                cy - reactor_r * 0.985,
+                reactor_r * 1.97,
+                reactor_r * 1.97,
+            )
+        )
+
+        # Segmented engineering ring
+        seg_r = orb_r * 1.08
+        seg_rect = QRectF(
+            cx - seg_r,
+            cy - seg_r,
+            seg_r * 2,
+            seg_r * 2,
+        )
+
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.setPen(QPen(qcol(active, 135), 1.2))
+
+        for start_deg in (8, 52, 96, 140, 184, 228, 272, 316):
+            p.drawArc(
+                seg_rect,
+                int(start_deg * 16),
+                int(18 * 16),
+            )
+
+        # Three restrained rotating orbital arcs
+        orbital_sizes = (0.18, 0.235, 0.29)
+
+        for idx, frac in enumerate(orbital_sizes):
+            rr = fw * frac
+
+            if self.muted:
+                ring_alpha = 150 - idx * 28
+                ring_width = 1.4 if idx == 0 else 0.95
+            elif self.speaking:
+                ring_alpha = 235 - idx * 32
+                ring_width = 2.6 if idx == 0 else 1.55
+            elif self.state in ("THINKING", "PROCESSING"):
+                ring_alpha = 195 - idx * 30
+                ring_width = 2.2 if idx == 0 else 1.3
+            else:
+                ring_alpha = 160 - idx * 28
+                ring_width = 2.0 if idx == 0 else 1.15
+
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.setPen(QPen(qcol(active, ring_alpha), ring_width))
+
+            rect = QRectF(
+                cx - rr,
+                cy - rr,
+                rr * 2,
+                rr * 2,
+            )
+
+            start = int(self._rings[idx] * 16)
+            span = int((95 - idx * 12) * 16)
+
+            p.drawArc(rect, start, span)
+            p.drawArc(rect, start + 180 * 16, span)
+
+        # Slow breathing ring
+        breathe = math.sin(self._tick * 0.04)
+
+        if self.muted:
+            pulse_r = fw * (0.257 + breathe * 0.012)
+        elif self.speaking:
+            pulse_r = fw * (0.259 + breathe * 0.016)
+        elif self.state in ("THINKING", "PROCESSING"):
+            pulse_r = fw * (0.258 + breathe * 0.010)
+        else:  # LISTENING / default
+            pulse_r = fw * (0.256 + breathe * 0.008)
+
+        p.setPen(QPen(qcol(active, 42), 1))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawEllipse(
+            QRectF(
+                cx - pulse_r,
+                cy - pulse_r,
+                pulse_r * 2,
+                pulse_r * 2,
+            )
+        )
+
+        # Tiny assistant name
+        p.setPen(QPen(qcol(active, 190), 1))
+        p.setFont(QFont("Courier New", 10, QFont.Weight.Bold))
+
+        p.drawText(
+            QRectF(
+                0,
+                cy + fw * 0.33,
+                W,
+                24,
+            ),
+            Qt.AlignmentFlag.AlignCenter,
+            self._assistant_name,
+        )
+
+        # Minimal state indicator
+        if self.muted:
+            status = "MUTED"
+            status_color = C.MUTED_C
+        elif self.speaking:
+            status = "SPEAKING"
+            status_color = active
+        elif self.state == "THINKING":
+            status = "THINKING"
+            status_color = C.ACC2
+        elif self.state == "PROCESSING":
+            status = "PROCESSING"
+            status_color = C.ACC2
+        elif self.state == "LISTENING":
+            status = "LISTENING"
+            status_color = C.GREEN
+        else:
+            status = self.state
+            status_color = active
+
+        dot = "●" if self._blink else "○"
+
+        p.setPen(QPen(qcol(status_color, 220), 1))
+        p.setFont(QFont("Courier New", 8, QFont.Weight.Bold))
+
+        p.drawText(
+            QRectF(
+                0,
+                cy + fw * 0.375,
+                W,
+                22,
+            ),
+            Qt.AlignmentFlag.AlignCenter,
+            f"{dot}  {status}",
+        )
+
     def paintEvent(self, _):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -447,6 +767,10 @@ class HudCanvas(QWidget):
         W, H = self.width(), self.height()
         cx, cy = W / 2, H / 2
         fw = min(W, H)
+
+        if self._visual_mode == "core":
+            self._paint_core_mode(p, W, H, cx, cy, fw)
+            return
 
         # grid dots
         p.setPen(QPen(qcol(C.PRI_GHO), 1))
@@ -2039,6 +2363,7 @@ class MainWindow(QMainWindow):
 
         self._ui_mode = mode
         core_mode = mode == "core"
+        self.hud._visual_mode = mode
 
         self._header.setVisible(not core_mode)
         self._left_panel.setVisible(not core_mode)
