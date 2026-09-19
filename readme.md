@@ -119,9 +119,6 @@ docs/screenshots/command-center.png
 docs/screenshots/tool-in-action.png
 ```
 
-After adding the real images, enable this section:
-
-<!--
 ### Core Mode
 
 ![Mark-LI Advanced Core Mode](docs/screenshots/core-mode.png)
@@ -129,11 +126,6 @@ After adding the real images, enable this section:
 ### Command Center
 
 ![Mark-LI Advanced Command Center](docs/screenshots/command-center.png)
-
-### Assistant action / tool execution
-
-![Mark-LI Advanced tool execution](docs/screenshots/tool-in-action.png)
--->
 
 ---
 
