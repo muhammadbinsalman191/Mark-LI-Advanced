@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Upstream MARK LI
+    url: https://github.com/FatihMakes/Mark-LI
+    about: Use the upstream repository for issues that are specific to the original MARK LI project rather than this derivative.

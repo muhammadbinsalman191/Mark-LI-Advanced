@@ -1,177 +1,203 @@
-# ⚙️ MARK LI (51)
-### The Ultimate Cross-Platform Personal AI Assistant — By FatihMakes
+# ⚙️ Mark-LI Advanced
 
-> 📺 **[Watch the full setup video on YouTube](https://www.youtube.com/@FatihMakes)**
+### A maintained derivative of FatihMakes/Mark-LI, focused on extending a local JARVIS-style AI assistant
 
-A real-time voice AI that can hear, see, understand, and control your computer — on any OS. Supports Windows, macOS, and Linux. Built on the Gemini Live API for native audio streaming, delivering zero subscriptions and total digital autonomy.
+> **Upstream project:** [FatihMakes/Mark-LI](https://github.com/FatihMakes/Mark-LI)  
+> **Derivative maintainer:** [Muhammad Bin Salman](https://github.com/muhammadbinsalman191)  
+> **Development branch:** `jarvis-advanced`
 
----
+Mark-LI Advanced is a public derivative of **MARK LI** by **FatihMakes**. It keeps clear attribution to the upstream project while serving as a separate development branch for my own experiments, interface work, maintenance changes, reliability improvements, and AI-assistant extensions.
 
-## ✨ Overview
-
-MARK LI is the final form of the core: an assistant you extend without ever touching its engine. Drop a single plugin file into the `plugins/` folder and JARVIS learns a new skill on the next launch — no code changes, no configuration, no risk. On top of that, the voice itself got smarter: JARVIS now hears the emotion in your voice, knows when you're talking to someone else in the room and stays silent, and can hold one conversation for hours without losing the thread.
-
-It's not just an assistant — it's an extension of your digital life.
+This repository does **not** claim authorship of the original MARK LI codebase or upstream features. The purpose of this README is to make the relationship between upstream work and my own maintenance work explicit.
 
 ---
 
-## 🚀 Capabilities
+## ✨ What Mark-LI Advanced is
 
-### Core Features
-| Feature | Description |
+The upstream MARK LI project provides the core foundation for a cross-platform personal AI assistant with real-time voice interaction, computer control, plugins, memory, vision, automation, and related capabilities.
+
+**Mark-LI Advanced** builds on that foundation as a maintained derivative. My work in this repository focuses on evolving the experience without hiding where the original project came from.
+
+### Current derivative work
+
+The `jarvis-advanced` branch includes work such as:
+
+- **Core / Command Center mode control** exposed to the assistant through a `set_ui_mode` tool in `main.py`
+- AI-controlled switching requests for entering or leaving the Command Center
+- **Core protocol and prompt refinements**
+- **Runtime-memory protection work**, including keeping personal runtime memory out of normal source-control history
+- Ongoing interface, integration, debugging, and maintainability work
+- A separate development branch so custom work can evolve without pretending to replace upstream
+
+> I only list derivative changes here when they are actually present in this repository. Upstream MARK LI capabilities remain credited to FatihMakes.
+
+---
+
+## 🧭 Upstream vs. derivative ownership
+
+| Area | Attribution |
 |---|---|
-| 🧩 Plugin System | Drop a single `.py` file into `plugins/` — JARVIS learns a new skill on next launch |
-| 🎙️ Real-time Voice | Ultra-low latency conversation in any language via Gemini Live API |
-| 💓 Affective Dialog | Hears the emotion in your voice and adapts its tone in response |
-| 🤫 Proactive Audio | Knows when you're not talking to it — background chatter never triggers a reply |
-| ♾️ Unlimited Sessions | Sliding-window context compression — one conversation can last for hours |
-| 🖥️ System Control | Launch apps, adjust volume/brightness, WiFi, shortcuts, power — all by voice |
-| 🧩 Autonomous Tasks | High-level planning for complex multi-step goals via agent mode |
-| 👁️ Visual Awareness | Real-time screen capture and webcam vision piped into your main Gemini session |
-| 🧠 Persistent Memory | Deeply remembers projects, preferences, and personal context across sessions |
-| ⌨️ Hybrid Input | Seamlessly switch between keyboard typing and voice commands |
-| 🌅 Morning Briefing | On first boot: greets you, reads the time, recaps yesterday, and fetches live news |
-| 🔔 Proactive 2.0 | Time-aware, context-aware check-ins — knows the time of day, your projects, and what you've been discussing |
-| 🗓️ Session Memory | Summarises each conversation and mentions it naturally next morning — consumed after use, never repeats |
-| 👁️‍🗨️ Background Monitoring | User-configured topic watching — checks for new headlines once a day and alerts naturally |
-| 📊 Hardware Monitoring | Continuous CPU, RAM, GPU and temperature telemetry with localized voice alerts |
-| 🌤️ Weather Report | Live weather data for your city, personalized from memory |
-| 🗺️ Dynamic Content Panel | Scrollable display layer beneath the HUD that renders web results, news, and search data |
-| 🔍 Multi-Mode Web Search | `news` / `research` / `price` / `compare` / `search` — Gemini Grounded first, DDG fallback |
-| ⏰ Smart Reminders | OS-native scheduled notifications (Windows Task Scheduler / macOS LaunchAgent / Linux systemd) |
-| ✈️ Flight Finder | Live flight price and availability lookup |
-| 🎮 Game Updater | Checks and triggers game updates on Steam and Epic Games on demand |
-| 📂 File Processor | Read, summarize, and answer questions about local files |
-| 💻 Code Helper | Inline code review, debugging, and generation |
-| 🌐 Browser Control | Open URLs, navigate tabs, and interact with the browser by voice |
-| 📨 Send Message | Compose and send messages through WhatsApp, Telegram, and more |
-| 🎬 YouTube Control | Search, play, and control YouTube playback by voice |
-| 🖱️ Desktop Control | Taskbar, window management, and desktop-level operations |
-| 🧑‍💻 Silent Language Memory | Detects spoken language on first use — all future sessions adapt automatically |
-| 📱 Remote Dashboard | Control the assistant from your phone via QR code pairing |
-| ⚡ Auto-Start on Boot | Registers with the OS startup system (registry / LaunchAgent / .desktop) |
-| 📋 Clipboard Intelligence | Copy any text → floating panel with Translate / Summarise / Explain / Fix |
-| 🎨 Assistant Customization | Change the assistant name and your name from the UI — takes effect immediately |
+| Original MARK LI project and core architecture | **FatihMakes / upstream contributors** |
+| Original MARK LI feature set | **FatihMakes / upstream contributors** |
+| `Mark-LI-Advanced` repository maintenance | **Muhammad Bin Salman** |
+| `jarvis-advanced` branch changes | **Muhammad Bin Salman**, except where code is inherited from upstream |
+| Future community contributions to this repo | Their respective contributors |
+
+The upstream project can be found here:
+
+**https://github.com/FatihMakes/Mark-LI**
 
 ---
 
-## 🆕 What's New in Mark LI
+## 🚀 Quick start
 
-### 🧩 Plugin System — Extend JARVIS Without Touching a Single Core File
-The headline feature of Mark LI, and the reason it's the final architecture version. Every new capability from now on ships as a single `.py` file:
-
-1. Download a plugin file (e.g. `calorie_counter.py`)
-2. Drop it into the `plugins/` folder
-3. Restart JARVIS — done. The skill is live, by voice, in any language.
-
-Each plugin declares its own Gemini tool schema and logic in one file. The engine auto-discovers it at startup, registers it with the Live session, and lists it in the new **🧩 Plugin Manager** panel where every plugin gets its own persistent ON/OFF toggle.
-
-Safety is built in at three layers: a broken or badly written plugin can **never** crash JARVIS — it simply shows up as "BROKEN" in the manager with the error explained, while every other tool and plugin keeps working. Name collisions with core tools are detected and rejected automatically. Want to write your own? Copy `plugins/_template.py` and fill in two things: the `PLUGIN` dict and the `run()` function.
-
-### 💓 Affective Dialog — JARVIS Hears How You Feel
-Powered by Gemini Live's native audio understanding, JARVIS now picks up the emotion in your voice — excitement, frustration, fatigue — and adapts its own tone in response. Late-night tired questions get calm answers; excited announcements get energy back.
-
-### 🤫 Proactive Audio — Knows When You're Not Talking to It
-The biggest quality-of-life upgrade for an always-listening assistant: JARVIS can now tell when speech isn't addressed to it. Talking to someone in the room, taking a phone call, TV in the background — it stays silent instead of interjecting. No wake word needed, no accidental replies.
-
-### ♾️ Unlimited Session Length — The Conversation Never Dies
-Sliding-window context compression means the Live session no longer terminates when the context window fills up. Combined with session resumption, JARVIS holds one continuous conversation for hours without losing the thread.
-
-All three Live API upgrades degrade gracefully: if the preview API ever rejects them, JARVIS automatically reconnects with the standard configuration — users never see a crash.
-
----
-
-## 🗺️ Mark Roadmap
-
-| Mark | Focus |
-|---|---|
-| **XLVIII** | Instant interrupt · parallel news · two-phase briefing · exponential backoff · vision cooldown |
-| **XLIX** | Auto-start · clipboard intelligence · assistant customization |
-| **L** | Session memory · background monitoring · proactive 2.0 · instant vision · parallel news search |
-| **LI** | Plugin system · affective dialog · proactive audio · unlimited sessions |
-| **LII+** | Plugin files: email · quiz mode · calorie counter · calendar · and more |
-
----
-
-## ⚡ Quick Start
+Clone this repository and switch to the maintained development branch:
 
 ```bash
-git clone https://github.com/FatihMakes/Mark-LI.git
-cd Mark-LI
+git clone https://github.com/muhammadbinsalman191/Mark-LI-Advanced.git
+cd Mark-LI-Advanced
+git checkout jarvis-advanced
 pip install -r requirements.txt
 python main.py
 ```
 
-> ⚠️ **Installation Note:** Some OS-specific dependencies are not bundled in `requirements.txt` to keep the repo lightweight. If you hit a `ModuleNotFoundError`, install the missing package with `pip install <module_name>`.
+> **Note:** Some dependencies are operating-system specific. If a required module is missing, follow the dependency/setup guidance in the repository before opening an issue.
 
 ---
 
 ## 📋 Requirements
 
 | Requirement | Details |
-| --- | --- |
-| **OS** | Windows 10/11, macOS, or Linux |
-| **Python** | 3.11 or 3.12 |
-| **Microphone** | Required for voice interaction |
-| **API Key** | Free Gemini API key (`config/api_keys.json`) |
+|---|---|
+| OS | Windows 10/11, macOS, or Linux |
+| Python | Follow the version supported by the current branch |
+| Microphone | Required for voice interaction |
+| API key | Gemini API key used by the current assistant runtime |
+| Git | Recommended for updates and contribution workflow |
 
 ---
 
-## 🗂️ Project Structure
+## 🧩 Architecture overview
 
-```
-Mark LI/
-├── main.py                   # Core loop — Gemini Live session, audio I/O, tool dispatch
-├── ui.py                     # PyQt6 HUD — waveform, log panel, plugin manager, camera feed
-├── setup.py                  # First-run configuration wizard
-├── plugins/
-│   └── _template.py          # Copy this to write a new plugin — one file, drop in, done
+The inherited MARK LI architecture is organized around a live AI session, a desktop UI, action modules, plugins, local configuration, and memory.
+
+```text
+Mark-LI-Advanced/
+├── main.py
+├── ui.py
+├── setup.py
+├── requirements.txt
 ├── actions/
-│   ├── web_search.py         # Gemini + DDG parallel search (news, research, price, compare)
-│   ├── screen_processor.py   # Screen capture & webcam vision via Gemini Live
-│   ├── background_monitor.py # User-configured topic watching — daily DDG check, no crypto
-│   ├── proactive.py          # Proactive 2.0 — time/context/rotation-aware check-ins
-│   ├── reminder.py           # OS-native scheduled notifications
-│   ├── system_monitor.py     # CPU / RAM / GPU / temperature telemetry
-│   ├── computer_settings.py  # Volume, brightness, WiFi, power
-│   ├── computer_control.py   # Keyboard shortcuts, mouse, window management
-│   ├── open_app.py           # Application launcher
-│   ├── browser_control.py    # Web browser control
-│   ├── file_controller.py    # File system operations
-│   ├── file_processor.py     # Document reading and summarization
-│   ├── send_message.py       # Messaging integration
-│   ├── weather_report.py     # Live weather data
-│   ├── flight_finder.py      # Flight search
-│   ├── youtube_video.py      # YouTube playback control
-│   ├── game_updater.py       # Game update management (Steam / Epic)
-│   ├── code_helper.py        # Code review and generation
-│   ├── dev_agent.py          # Developer task agent
-│   └── desktop.py            # Desktop and taskbar control
-├── memory/
-│   ├── memory_manager.py     # Load/save long_term.json — sessions, monitors, identity
-│   └── long_term.json        # Persistent store: identity, preferences, projects, sessions, monitors
 ├── core/
-│   ├── prompt.txt            # Assistant personality and tool-routing rules
-│   └── plugin_loader.py      # Plugin engine — discovery, validation, crash isolation
-└── config/
-    └── api_keys.json         # API key, OS setting, assistant name, user name
+├── config/
+├── memory/
+├── plugins/
+├── dashboard/
+└── ...
 ```
 
+### Important areas
+
+- `main.py` — live assistant session, tool declarations and dispatch
+- `ui.py` — desktop interface
+- `actions/` — computer, browser, file, search, media and system actions
+- `core/` — prompt / assistant infrastructure and plugin-related components
+- `memory/` — local memory infrastructure
+- `plugins/` — extendable assistant skills
+
 ---
 
-## ⚠️ License
+## 🖥️ Screenshots
 
-Personal and non-commercial use only.
-Licensed under **[Creative Commons BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)**.
+Real screenshots should be taken from the current `jarvis-advanced` build so the README shows what the repository actually contains.
+
+Recommended files:
+
+```text
+docs/screenshots/core-mode.png
+docs/screenshots/command-center.png
+docs/screenshots/tool-in-action.png
+```
+
+After adding the real images, enable this section:
+
+<!--
+### Core Mode
+
+![Mark-LI Advanced Core Mode](docs/screenshots/core-mode.png)
+
+### Command Center
+
+![Mark-LI Advanced Command Center](docs/screenshots/command-center.png)
+
+### Assistant action / tool execution
+
+![Mark-LI Advanced tool execution](docs/screenshots/tool-in-action.png)
+-->
 
 ---
 
-## 👤 Connect with the Creator
+## 🛠️ Maintenance goals
 
-Engineered by a developer building a real-world JARVIS-style assistant.
-⭐ **Star the repository to support the journey to Mark 100.**
+This derivative is maintained with a focus on:
 
-| Platform | Link |
-| --- | --- |
-| YouTube | [@FatihMakes](https://www.youtube.com/@FatihMakes) |
-| Instagram | [@fatihmakes](https://www.instagram.com/fatihmakes) |
+- making custom changes easy to identify
+- keeping upstream attribution clear
+- reducing regressions during UI and tool changes
+- keeping local/private runtime data out of Git
+- improving documentation for contributors
+- tracking bugs and feature requests through GitHub Issues
+- creating clearer release notes and milestones as the project matures
+
+See [ROADMAP.md](ROADMAP.md) for planned work.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome when they improve reliability, documentation, usability, accessibility, cross-platform behavior, testing, or clearly scoped assistant capabilities.
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+
+For bugs or feature requests, use the GitHub Issue templates included in this repository.
+
+---
+
+## 🔐 Security and privacy
+
+Do **not** commit:
+
+- API keys
+- authentication tokens
+- private certificates
+- personal memory files
+- local configuration containing secrets
+- screenshots containing private information
+
+If you discover a security issue, please follow [SECURITY.md](SECURITY.md).
+
+---
+
+## ⚠️ Licensing and upstream terms
+
+This repository is derived from **FatihMakes/Mark-LI**. The upstream repository states that its project is for personal/non-commercial use under **CC BY-NC 4.0**.
+
+This repository does not attempt to override or relicense inherited upstream code. Users and contributors are responsible for complying with the upstream project's applicable terms and attribution requirements.
+
+Because licensing terms can affect whether software is considered "open source" under different definitions, this repository should be described accurately as a **public derivative / source-available project** unless and until the applicable licensing position is clarified.
+
+---
+
+## 🙏 Credits
+
+### Original project
+
+**FatihMakes** — creator and upstream maintainer of MARK LI  
+https://github.com/FatihMakes/Mark-LI
+
+### Derivative maintainer
+
+**Muhammad Bin Salman**  
+GitHub: https://github.com/muhammadbinsalman191
+
+Mark-LI Advanced exists because of the work of the original MARK LI project and its contributors. Upstream credit should remain visible in derivative documentation and source distributions.

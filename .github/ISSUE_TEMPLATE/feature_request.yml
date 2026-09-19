@@ -1,0 +1,51 @@
+name: Feature request
+description: Suggest an improvement for Mark-LI Advanced
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / use case
+      description: What problem would this feature solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior you would like.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Optional. What other approaches did you consider?
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Core / live assistant
+        - UI / Command Center
+        - Actions / tools
+        - Plugins
+        - Memory / configuration
+        - Documentation
+        - Testing / CI
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues for similar requests.
+          required: true
