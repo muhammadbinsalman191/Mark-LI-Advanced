@@ -2339,15 +2339,11 @@ class MainWindow(QMainWindow):
         sc_mute = QShortcut(QKeySequence("F4"), self)
         sc_mute.activated.connect(self._toggle_mute)
         sc_full = QShortcut(QKeySequence("F11"), self)
-        sc_full = QShortcut(QKeySequence("F11"), self)
         sc_full.activated.connect(self._toggle_fullscreen)
 
         sc_mode = QShortcut(QKeySequence("Ctrl+Alt+C"), self)
         sc_mode.activated.connect(self._toggle_ui_mode)
 
-        sc_intr = QShortcut(QKeySequence("Escape"), self)
-        sc_intr.activated.connect(self._do_interrupt)
-        sc_full.activated.connect(self._toggle_fullscreen)
         sc_intr = QShortcut(QKeySequence("Escape"), self)
         sc_intr.activated.connect(self._do_interrupt)
 
