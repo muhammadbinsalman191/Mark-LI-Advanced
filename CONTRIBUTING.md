@@ -83,3 +83,23 @@ If you accidentally commit a secret, revoke/rotate it immediately; deleting it i
 This project contains code derived from FatihMakes/Mark-LI. Contributions must respect the applicable upstream terms and attribution requirements.
 
 Submitting a contribution does not remove upstream ownership or attribution.
+
+## Startup smoke test
+
+Before opening a pull request that affects startup, dependencies, configuration, or the main application flow, run:
+
+    python tests/smoke_startup.py
+
+The smoke test checks that:
+
+- required project files exist
+- critical Python dependencies are available
+- `main.py` and `ui.py` compile successfully
+- local API configuration can be handled without printing secret values
+- `main.py` can be imported without immediately failing
+
+A successful run ends with:
+
+    [PASS] Startup smoke test passed.
+
+The smoke test is intentionally designed not to require a real API request or expose API-key values.
