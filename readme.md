@@ -70,7 +70,7 @@ python main.py
 | Requirement | Details |
 |---|---|
 | OS | Windows 10/11, macOS, or Linux |
-| Python | Follow the version supported by the current branch |
+| Python | Python 3.12.x — Python 3.12.10 is the currently verified environment |
 | Microphone | Required for voice interaction |
 | API key | Gemini API key used by the current assistant runtime |
 | Git | Recommended for updates and contribution workflow |

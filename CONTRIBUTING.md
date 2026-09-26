@@ -84,6 +84,18 @@ This project contains code derived from FatihMakes/Mark-LI. Contributions must r
 
 Submitting a contribution does not remove upstream ownership or attribution.
 
+## Python version
+
+Mark-LI Advanced currently targets **Python 3.12.x**.
+
+The currently verified development environment uses **Python 3.12.10**. Other Python versions should not be assumed compatible until they have been tested.
+
+Check your interpreter before installing dependencies:
+
+    python --version
+
+If it is not Python 3.12.x, install Python 3.12 and use that interpreter for setup and testing.
+
 ## Startup smoke test
 
 Before opening a pull request that affects startup, dependencies, configuration, or the main application flow, run:
