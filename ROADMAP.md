@@ -8,20 +8,20 @@ Items are intentionally written as plans rather than claims that they already ex
 
 - [x] Preserve upstream attribution
 - [x] Maintain custom work on `jarvis-advanced`
-- [ ] Replace the inherited README with derivative-specific documentation
-- [ ] Add real screenshots from the current build
-- [ ] Add contributor guidance
-- [ ] Add issue templates
-- [ ] Document derivative changes more clearly
-- [ ] Make `jarvis-advanced` the default branch or merge the stable derivative into `main`
+- [x] Replace the inherited README with derivative-specific documentation
+- [x] Add real screenshots from the current build
+- [x] Add contributor guidance
+- [x] Add issue templates
+- [x] Document derivative changes more clearly
+- [x] Make `jarvis-advanced` the default branch or merge the stable derivative into `main`
 
 ## Phase 2 — Reliability and testing
 
-- [ ] Create repeatable smoke tests for startup
+- [x] Create repeatable smoke tests for startup
 - [ ] Test tool dispatch failures cleanly
 - [ ] Test Core / Command Center mode transitions
 - [ ] Add regression checks for memory/config privacy
-- [ ] Document supported Python versions
+- [x] Document supported Python versions
 - [ ] Document platform-specific limitations
 - [ ] Add a basic CI workflow once tests are stable
 
@@ -43,10 +43,10 @@ Items are intentionally written as plans rather than claims that they already ex
 
 ## Phase 5 — Maintainer workflow
 
-- [ ] Track bugs and requests through GitHub Issues
-- [ ] Use pull requests for non-trivial changes
+- [x] Track bugs and requests through GitHub Issues
+- [x] Use pull requests for non-trivial changes
 - [ ] Add release tags / release notes for stable milestones
-- [ ] Maintain a changelog for derivative changes
+- [x] Maintain a changelog for derivative changes
 - [ ] Review dependencies and security-sensitive integrations regularly
 
 ## Possible future work
